@@ -48,6 +48,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/depositor/**").hasAnyRole("DEPOSITOR", "SUPER_ADMIN")
+                        .requestMatchers("/api/debtor/**").hasAnyRole("DEBTOR", "SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

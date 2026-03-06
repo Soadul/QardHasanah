@@ -48,8 +48,9 @@ public class User {
     @Column(name = "verification_token")
     private String verificationToken;
 
-    @Column(name = "role")
-    private String role = "USER";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role = Role.DEBTOR;
 
     @Column(name = "created_at")
     private Long createdAt = System.currentTimeMillis();

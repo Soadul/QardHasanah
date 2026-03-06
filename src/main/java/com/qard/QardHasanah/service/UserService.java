@@ -4,6 +4,7 @@ import com.qard.QardHasanah.dto.AuthResponse;
 import com.qard.QardHasanah.dto.LoginRequest;
 import com.qard.QardHasanah.dto.RegisterRequest;
 import com.qard.QardHasanah.dto.UserResponse;
+import com.qard.QardHasanah.entity.Role;
 import com.qard.QardHasanah.entity.User;
 import com.qard.QardHasanah.repository.UserRepository;
 import com.qard.QardHasanah.security.JwtUtil;
@@ -48,7 +49,12 @@ public class UserService {
         user.setIsActive(true);
         user.setIsEmailVerified(false);
         user.setVerificationToken(UUID.randomUUID().toString());
-        user.setRole("USER");
+        // Default to DEBTOR if no role specified, SUPER_ADMIN cannot be self-registered
+        Role role = request.getRole();
+        if (role == null || role == Role.SUPER_ADMIN) {
+            role = Role.DEBTOR;
+        }
+        user.setRole(role);
         user.setCreatedAt(System.currentTimeMillis());
         user.setUpdatedAt(System.currentTimeMillis());
 
@@ -77,7 +83,7 @@ public class UserService {
             throw new IllegalArgumentException("User account is inactive");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getId());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getRole().name());
         return new AuthResponse(token, "Bearer", convertToResponse(user));
     }
 
@@ -163,6 +169,28 @@ public class UserService {
     }
 
     /**
+     * Get users by role
+     */
+    public List<UserResponse> getUsersByRole(Role role) {
+        return userRepository.findByRole(role)
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Update user role
+     */
+    public UserResponse updateUserRole(Long id, Role role) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setRole(role);
+        user.setUpdatedAt(System.currentTimeMillis());
+        User updatedUser = userRepository.save(user);
+        return convertToResponse(updatedUser);
+    }
+
+    /**
      * Convert User entity to UserResponse DTO
      */
     private UserResponse convertToResponse(User user) {
@@ -171,6 +199,7 @@ public class UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
+                user.getRole(),
                 user.getIsActive(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()

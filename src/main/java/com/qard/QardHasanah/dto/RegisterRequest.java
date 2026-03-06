@@ -1,5 +1,6 @@
 package com.qard.QardHasanah.dto;
 
+import com.qard.QardHasanah.entity.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -33,5 +34,8 @@ public class RegisterRequest {
     @Size(min = 6, message = "Password must be at least 6 characters")
     @Schema(description = "User's password", example = "password123", minLength = 6)
     private String password;
+
+    @Schema(description = "User's role", example = "DEPOSITOR", allowableValues = {"DEPOSITOR", "DEBTOR"})
+    private Role role;
 }
 
