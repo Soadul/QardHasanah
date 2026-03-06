@@ -77,7 +77,7 @@ public class UserService {
             throw new IllegalArgumentException("User account is inactive");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId());
         return new AuthResponse(token, "Bearer", convertToResponse(user));
     }
 

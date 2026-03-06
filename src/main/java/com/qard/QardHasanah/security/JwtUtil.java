@@ -22,13 +22,19 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    public String generateToken(String email) {
+    public String generateToken(String email, Long userId) {
         return Jwts.builder()
                 .subject(email)
+                .claim("userId", userId)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public Long extractUserId(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("userId", Long.class);
     }
 
     public String extractEmail(String token) {
