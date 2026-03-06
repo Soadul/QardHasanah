@@ -1,6 +1,7 @@
 package com.qard.QardHasanah.exception;
 
 import com.qard.QardHasanah.dto.ApiResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,6 +41,29 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<String>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        String message = "A database constraint was violated.";
+
+        // Check for duplicate email error
+        String rootCauseMessage = ex.getMostSpecificCause().getMessage();
+        if (rootCauseMessage != null) {
+            if (rootCauseMessage.contains("email") || rootCauseMessage.contains("uk6dotkott2kjsp8vw4d0m25fb7")) {
+                message = "This email is already registered. Please use a different email or login to your existing account.";
+            } else if (rootCauseMessage.contains("duplicate key")) {
+                message = "This record already exists.";
+            }
+        }
+
+        ApiResponse<String> response = new ApiResponse<>(
+                message,
+                null,
+                false,
+                HttpStatus.CONFLICT.value()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(Exception.class)
