@@ -42,6 +42,15 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "is_email_verified")
+    private Boolean isEmailVerified = false;
+
+    @Column(name = "verification_token")
+    private String verificationToken;
+
+    @Column(name = "role")
+    private String role = "USER";
+
     @Column(name = "created_at")
     private Long createdAt = System.currentTimeMillis();
 

@@ -1,14 +1,13 @@
 package com.qard.QardHasanah.controller;
 
 import com.qard.QardHasanah.dto.ApiResponse;
+import com.qard.QardHasanah.dto.AuthResponse;
 import com.qard.QardHasanah.dto.LoginRequest;
 import com.qard.QardHasanah.dto.RegisterRequest;
 import com.qard.QardHasanah.dto.UserResponse;
 import com.qard.QardHasanah.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
-@Tag(name = "User Management", description = "APIs for user registration, login, and management")
+@Tag(name = "User Management", description = "APIs for user registration, email verification, login, and management")
 public class UserController {
 
     @Autowired
@@ -33,30 +32,37 @@ public class UserController {
      * POST /api/users/register
      */
     @PostMapping("/register")
-    @Operation(summary = "Register a new user", description = "Creates a new user account with provided credentials")
+    @Operation(summary = "Register a new user", description = "Creates a new user account and sends email verification link")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "User registered successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input or email already in use")
     })
     public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            UserResponse userResponse = userService.register(request);
-            ApiResponse<UserResponse> response = new ApiResponse<>(
-                    "User registered successfully",
-                    userResponse,
-                    true,
-                    HttpStatus.CREATED.value()
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (IllegalArgumentException e) {
-            ApiResponse<UserResponse> response = new ApiResponse<>(
-                    e.getMessage(),
-                    null,
-                    false,
-                    HttpStatus.BAD_REQUEST.value()
-            );
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        UserResponse userResponse = userService.register(request);
+        ApiResponse<UserResponse> response = new ApiResponse<>(
+                "User registered successfully. Please verify your email before login.",
+                userResponse,
+                true,
+                HttpStatus.CREATED.value()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Verify user email
+     * GET /api/users/verify-email
+     */
+    @GetMapping("/verify-email")
+    @Operation(summary = "Verify email", description = "Verifies user email with token sent to inbox")
+    public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestParam String token) {
+        userService.verifyEmail(token);
+        ApiResponse<String> response = new ApiResponse<>(
+                "Email verified successfully. You can now login.",
+                null,
+                true,
+                HttpStatus.OK.value()
+        );
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -64,30 +70,20 @@ public class UserController {
      * POST /api/users/login
      */
     @PostMapping("/login")
-    @Operation(summary = "User login", description = "Authenticates user with email and password")
+    @Operation(summary = "User login", description = "Authenticates user with email and password, returns JWT token")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Login successful"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid email or password")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
-    public ResponseEntity<ApiResponse<UserResponse>> login(@Valid @RequestBody LoginRequest request) {
-        try {
-            UserResponse userResponse = userService.login(request);
-            ApiResponse<UserResponse> response = new ApiResponse<>(
-                    "Login successful",
-                    userResponse,
-                    true,
-                    HttpStatus.OK.value()
-            );
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            ApiResponse<UserResponse> response = new ApiResponse<>(
-                    e.getMessage(),
-                    null,
-                    false,
-                    HttpStatus.UNAUTHORIZED.value()
-            );
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse authResponse = userService.login(request);
+        ApiResponse<AuthResponse> response = new ApiResponse<>(
+                "Login successful",
+                authResponse,
+                true,
+                HttpStatus.OK.value()
+        );
+        return ResponseEntity.ok(response);
     }
 
     /**

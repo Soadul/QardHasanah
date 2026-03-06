@@ -13,9 +13,13 @@ public class HomeController {
         return "Welcome to Qard Hasanah API! Visit /swagger-ui.html for API documentation";
     }
 
+    @GetMapping("/login")
+    public String loginInfo() {
+        return "Use POST /api/users/login with JSON body: {email, password}";
+    }
+
     @GetMapping("/health")
     public String health() {
         return "Application is running!";
     }
 }
-
